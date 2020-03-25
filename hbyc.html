@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>航班执行率预测</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <style>
+        body, div, ul, li, h1, h2, h3, h4, p, span, i, table, tr, td, th, dl, dd, dt {
+            margin: 0;
+            padding: 0;
+        }
+
+        .toolbar {
+            padding: 30px 25px; 
+        }
+
+        .toolbar::after {
+            clear: both;
+        }
+
+        .toolbar .titles {
+            float: left;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.4;
+            color: #4f8cce;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .toolbar .params {
+            float: right;
+        }
+
+        .select-box {
+            float: left;
+            position: relative;
+            margin-right: 15px;
+        }
+        ul li{
+            list-style: none;
+        }
+        .input{
+            width: 100px;
+            height: 38px;
+            line-height: 38px;
+            padding-left: 10px;
+            border: 1px solid #dcdee2;
+            position: relative;
+            color: #515a6e;
+            border-radius: 3px;
+        }
+        .input input{
+            border: none;
+            outline: none;
+            width: 90%;
+        }
+        .input img{
+            position: absolute;
+            right: 23px;
+            top: 32%;
+            width: 15px;
+            height: 15px;
+        }
+        .list{
+            z-index: 22;
+            position: absolute;
+            left: 0;
+            top: 42px;
+            width: 110px;
+            border: 1px solid #dcdee2;
+            background-color: #fff;
+            overflow: hidden;
+            font-size: 14px;
+        }
+        .list ul li{
+            width: 100%;
+            height: 30px;
+            cursor: pointer;
+            line-height: 30px;
+            padding-left: 10px;
+        }
+
+        .list ul li.selected {
+            background-color: #4f8cce;
+            color: #fff;
+        }
+
+        .list ul li:hover{
+            background-color: #4f8cce;
+            color: #fff;
+        }
+
+        .search-btn {
+            float: left;
+            width: 200px;
+            height: 40px;
+            font-size: 14px;
+            line-height: 40px;
+            color: white;
+            text-align: center;
+            letter-spacing: 5px;
+            background-color: #4f8cce;
+            border-radius: 3px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .statistics-box {
+            padding-left: 25px;
+        }
+
+        .statistics {
+            display: flex;
+            margin: 30px 0 50px;
+        }
+        .statistics li {
+            display: flex;
+            margin-right: 15px;
+            padding: 2px;
+            border: 1px solid #e3e4e5;
+            box-shadow: 0 0 6px 3px #edeeef;
+            border-radius: 3px;
+        }
+        .statistics li dl {
+            padding: 12px 5px 5px;
+        }
+        .statistics li dl dt {
+            font-size: 16px;
+            font-family: 'Source Han Sans CN medium';
+            line-height: 1.4;
+            color: #333;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .statistics li dl dd {
+            font-size: 14px;
+            font-family: 'Source Han Sans CN regular';
+            line-height: 1.4;
+            color: #8f8f8f;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .statistics li p {
+            padding: 15px 6px;
+            min-width: 72px;
+            font-size: 26px;
+            color: white;
+            text-align: center;
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+        }
+        .statistics li:first-child p {
+            background: -webkit-linear-gradient(#7486d6, #7486d6);
+            /* Safari 5.1 - 6.0 */
+            background: -o-linear-gradient(#92a5fa, #7486d6);
+            /* Opera 11.1 - 12.0 */
+            background: -moz-linear-gradient(#92a5fa, #7486d6);
+            /* Firefox 3.6 - 15 */
+            background: linear-gradient(#92a5fa, #7486d6);
+        }
+        .statistics li:nth-child(2) p {
+            background-color: #6ae3ae;
+            background: -webkit-linear-gradient(#6fe7b3, #4dc993);
+            /* Safari 5.1 - 6.0 */
+            background: -o-linear-gradient(#6fe7b3, #4dc993);
+            /* Opera 11.1 - 12.0 */
+            background: -moz-linear-gradient(#6fe7b3, #4dc993);
+            /* Firefox 3.6 - 15 */
+            background: linear-gradient(#6fe7b3, #4dc993);
+            }
+            .statistics li:last-child p {
+            background-color: #ec856d;
+            background: -webkit-linear-gradient(#f08a73, #d36349);
+            /* Safari 5.1 - 6.0 */
+            background: -o-linear-gradient(#f08a73, #d36349);
+            /* Opera 11.1 - 12.0 */
+            background: -moz-linear-gradient(#f08a73, #d36349);
+            /* Firefox 3.6 - 15 */
+            background: linear-gradient(#f08a73, #d36349);
+        }
+
+        .no-data {
+            padding-top: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 15px;
+        }
+
+        .upload-box {
+            padding: 20px 30px;
+            text-align: right;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        .list-table {
+            width: 100%;
+            color: #515a6e;
+        }
+
+        .list-table .tr {
+            border-bottom: 1px solid #ccc;
+        }
+
+        .list-table th {
+            height: 40px;
+            line-height: 40px;
+        }
+
+        .container {
+            width: 100%;
+        }
+
+        .content-table tr:nth-child(2n) {
+            background: #e4e4e4;
+        }
+
+        .content-table tr:hover {
+            background: #1c2438;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .detail {
+            padding: 30px 20px;
+        }
+
+        .first-tr, .second-tr, .last-tr, .inner-tr {
+            display: flex;
+            text-align: center;
+            line-height: 40px;
+        }
+
+        .first-tr:first-child {
+            border-top: 1px solid #ccc;
+        }
+
+        .first-tr {
+            border-left: 1px solid #ccc;
+        }
+        
+        .detail span {
+            border-bottom: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-all;
+        }
+
+        .inner-tr {
+            width: 100%;
+        }
+
+        .route {
+            width: 25%;
+        }
+
+        .second-tr {
+            width: 75%;
+        }
+
+        .airline, .fnum, .schFvol {
+            width: 20%;
+        }
+
+        .last-tr {
+            width: 80%;
+        }
+
+        .more-second, .more-last {
+            display: block;
+        }
+
+        .ftype {
+            width: 12%;
+        }
+
+        .actFvol {
+            width: 14%;
+        }
+
+        .decFvol {
+            width: 19%;
+        }
+
+        .inSch {
+            width: 15%;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="main">
+            <div class="toolbar">
+                <h2 class="titles">航班执行率预测</h2>
+                <div class="params">
+                    <div class="select-box">
+                        <div class="input" @click="openValue">
+                            <input v-model="flyTypeText" type="text" >
+                            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABa0lEQVRYR+2UzVXCQBSF382scEUHagVSQqjAWRI2wt5grMBjBUYpgLgBd44VaAlYgdqBK7MKzzMROCE/MEE8uJisJ7nf+97NgPb8YM/5ZAGsAWvg/xiQneCIkFxQLK6VCj//4n6QMmhSI7kiFrfqIXzXGUsDGgBIpgy80ZfT3jVEGn4wewbzMbNoFQA0jewGLXDysmuIlXAIV43D6cJwoQNzE4oB3oWJTDiYhVxMXgmQmpBBE43UBBM5/SxxnW5oo0SzEZjBsXDL1lr5F2QgDomcdl2Iebje+UdV+EoJyybbFsI0fCNAZh26EycmJjLhrxwLuelvMr6IpDeICHS6DkJ2zl1ynEdielKTu55JX4wBUhveIALojIn7ajyMsgGy6/dAGDHTvWm40QryU5RBbBu+FUDexM9H6k++9h4w2Z30/ADAjT7LzJdqMgxN3sufqdWBwjq6flq0fB/qgPwKoE5Q1VkLYA1YA9bAN4GIzCHqrKwGAAAAAElFTkSuQmCC" alt="">
+                        </div>
+                        <div class="list" v-show="isSelect">
+                            <ul>
+                                <li @click="getvalue(item)" v-for="(item,index) in sellist" :key="item.value" :class="flyType === item.value ? 'selected': ''">{{ item.label }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button @click="checkairport" class="search-btn">查询</button>
+                    </div>
+                </div>
+            </div>
+            <div class="statistics-box">
+                <ul class="statistics">
+                    <li v-for="(item, index) in statistics" :key="index">
+                        <dl>
+                            <dt>{{item.clabel}}</dt>
+                            <dd>{{item.elabel}}</dd>
+                        </dl>
+                        <p>{{item.value}}</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="upload-box" v-if="flightList.length > 0">
+                <a class="logo" href="http://devsupport.variflight.com/test-fast/future/het/export">
+                <img :src="logo" alt="数据下载"></a>
+            </div>
+            <div class="no-data" v-if="flightList.length === 0">{{ msgData }}</div>
+            <div class="container" v-else>
+                <table class="list-table" width="100%">
+                    <thead>
+                        <tr class="tr">
+                            <th style="width: 25%">航点</th>
+                            <th style="width: 25%">航点计划执行量</th>
+                            <th style="width: 25%">航点实际执行量</th>
+                            <th style="width: 25%">航班减量</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div style="overflow-y: auto;height: 400px;min-width: 1062px" class="container">
+                    <table class="list-table content-table">
+                        <tr v-for="(item, index) in flightList" :key="index" @click="goDetail(index)">
+                            <th style="width: 25%">{{ item.port }}</th>
+                            <th style="width: 25%">{{ item.totalSchFvol }}</th>
+                            <th style="width: 25%">{{ item.totalActFvol }}</th>
+                            <th style="width: 25%">{{ item.totalDecFvol }}</th>
+                        </tr>
+                    </table>
+                </div>
+               
+                <div class="detail" v-if="detail.length > 0">
+                    <table class="list-table" width="100%">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%">航线</th>
+                                <th style="width: 15%">航司</th>
+                                <th style="width: 10%">航班号</th>
+                                <th style="width: 10%">机型</th>
+                                <th style="width: 10%">计划执行量</th>
+                                <th style="width: 10%">实际执行量</th>
+                                <th style="width: 10%">航班减量</th>
+                                <th style="width: 10%">是否计划航班</th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <div style="overflow-y: auto;height: 400px;min-width: 1062px" class="tr-box">
+                        <div v-for="(item, index) in detail" :key="index" class="first-tr">
+                            <span class="route">{{ item.route }}</span>
+                            <div v-if="item.airlines.length > 0" :class="['second-tr', {'more-second': item.airlines.length > 1}]">
+                                <div v-for="(airlines, airlinesIndex) in item.airlines" :key="airlinesIndex" class="inner-tr">
+                                    <span class="airline">{{ airlines.airline }}</span>
+                                    <div v-if="airlines.flights.length > 0" :class="['last-tr', {'more-last': airlines.flights.length > 1}]">
+                                        <div v-for="(flights, flightIndex) in airlines.flights" :key="flightIndex" class="inner-tr">
+                                            <span class="fnum">{{ flights.fnum }}</span>
+                                            <span class="ftype">{{ flights.ftype }}</span>
+                                            <span class="schFvol">{{ flights.schFvol }}</span>
+                                            <span class="actFvol">{{ flights.actFvol }}</span>
+                                            <span class="decFvol">{{ flights.decFvol }}</span>
+                                            <span class="inSch">{{ flights.inSch ? '是' : '否' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            flyType: '1',
+            flyTypeText: '未来一周',
+            isSelect: false,
+            sellist: [
+                {value:'1',label:'未来一周'},
+                {value:'2',label:'未来二周'},
+                {value:'3',label:'未来三周'},
+                {value:'4',label:'未来四周'}
+            ],
+            flightList: [],
+            detail: [],
+            logo: 'data:image/jpg;base64,/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNreQABAAQAAABkAAD/4QMpaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA1LjAtYzA2MCA2MS4xMzQ3NzcsIDIwMTAvMDIvMTItMTc6MzI6MDAgICAgICAgICI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCBDUzUgV2luZG93cyIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozQUVDQTg3MjVBNjYxMUU5OUQxNkUzMEUyNDIxQzMyQiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozQUVDQTg3MzVBNjYxMUU5OUQxNkUzMEUyNDIxQzMyQiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjNBRUNBODcwNUE2NjExRTk5RDE2RTMwRTI0MjFDMzJCIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjNBRUNBODcxNUE2NjExRTk5RDE2RTMwRTI0MjFDMzJCIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+/+4ADkFkb2JlAGTAAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAEQAVAwERAAIRAQMRAf/EAIsAAAMBAAAAAAAAAAAAAAAAAAcJCgYBAAIDAAAAAAAAAAAAAAAAAAYIBAUHEAAABQMDAQQLAAAAAAAAAAABAgMEBQYHCAASExEhMRR38GGhMmK1FrY3OAkRAAECBAUCAgYLAAAAAAAAAAECBBEDBQYAITESB0ETMhQisnQVdTZRYZEjs7Q1Fhc3CP/aAAwDAQACEQMRAD8AuZvJfa19g4GGqa6tTtqUgJ2pYykmUs7ScKMk5iX5fBkeLoJKkZNhBEwnWVEiZADtHu0W2hY9zX2+nU212ynT6Q2XPUhJAUZcuG4pBI3HMQSmJPQYpq3X6VbzdDqrzRJbzJqZYUYw3K0iRoPrOQwrPGDLShLY3Uznl7y3SUTpx1lPBUfbpu/fvZkThPkkUWLCmY1v4tczARVIocG5NhEw3D2dNM7yZxVXLkteyGln0wGoptea4dlKUy4dooKlTlnaN2RA3GJOWMmtS8KfSqtX51bdwbGrIlyQSVePcAEJETDQmAgBnh0viEeLn3l4+Pl3fBt3denvd3q0nHbXv2Q9KMMbhuG3d0hif/G++OIzKn85rIZX3IoiOaVlljc5b6UrmUEjlxTLymaJj20hG829VmRKRYLggqkYhklkhEogIddPnyJZXLE5/ZF68WU57Mms7VZjvtkRAnJnOVlK4ZKJQpO5KohSVAHLC8WzXrOQ3r9Bu51ISifWJ57c1WZQUSgCmOkCDAiECMsCHEK1X8y8arz1Zdqo8vLd3QUZzajq0cbPy5VEaRYqt0wCTlElTKt5GqWQiLdBzsAE0kwOUCnN0IWctXT/AKS5Hs5ralOtKoUxK5AS+XKlwM9QJ9BBECiSrxqRHNR2mIGdNZtH4ttitzqw6rLZ2UzIt0rVlLEPEropY0CugEdTloYHKuyg58XXvKN36fGzBLj4+sCVkMyoNKkXUsrky2UblU68JRUepFKYAL2nKHXuDUB9xdeY4KpVn+6HH7xNOqivL9sd+AqNHUDDXJJJGehOJLe7qF/ITut+dl+5PMtE9zd93Hyz0Q+jUfbhX+VH7H3s8xqn+ZLaZni7+uqL8Ok+oMZZdfzM+9pX6xwAR9Pbo8wOnBfhfwFcnzhsl9l5AaEnnz3TvhFR/MUvFxI/QHXtrX8N3j//2Q==',
+            statistics: [
+                {clabel: '计划航班量', elabel: 'Scheduled Flight', value: 0},
+                {clabel: '实际执行航班量', elabel: 'Prediction implementation Flight', value: 0},
+            ],
+            msgData: '暂无数据'
+        },
+        mounted() {
+            this.checkairport();
+        },
+
+        methods: {
+            checkairport() {
+                let data = {
+                    airport: 'HET',
+                    weeks: this.flyType
+                };
+                let that = this;
+                that.msgData = '数据加载中...';
+                $.ajax({
+                    url: 'http://devsupport.variflight.com/test-fast/future/het/list',
+                    type: 'POST',
+                    data: data,
+                    dataType: 'json',
+                    success: (response) => {
+                        if (!response){
+                        that.flightList=[];
+                            return;
+                        }
+                        that.flightList = response.data.list;
+                        that.detail = [];
+                        that.statistics = [
+                            {clabel: '计划航班量', elabel: 'Scheduled Flight', value: response.data.schTotal},
+                            {clabel: '实际执行航班量', elabel: 'Prediction implementation Flight', value: response.data.actTotal},
+                        ]
+                    },
+                    error: () => {
+                        that.detail = [];
+                        that.msgData = '数据请求失败，请稍后重试';
+                    }
+                })
+            },
+
+            goDetail(index) {
+                this.detail = [];
+                let arr = this.flightList[index].routes;
+                this.detail = this.flightList[index].routes;
+                arr.forEach(item => {
+                    this.detail.push(item);
+                })
+            },
+
+            openValue() {
+                this.isSelect = !this.isSelect;
+            },
+
+            getvalue(item){
+                this.flyTypeText = item.label;
+                this.flyType = item.value;
+                this.isSelect = false;
+            },
+        },
+    })
+</script>
+</html>
